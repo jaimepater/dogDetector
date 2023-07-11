@@ -1,3 +1,4 @@
+import super_gradients
 import tensorflow_datasets as tfds
 import tensorflow as tf
 import torch
@@ -5,6 +6,7 @@ import cv2
 import os
 import numpy as np
 from super_gradients.training import models
+import supervision as sv
 from super_gradients.common.object_names import Models
 
 
@@ -21,19 +23,15 @@ def detector():
     dog_count = 0
     detector_count = 0
     bg_count = 0
-    model = torch.hub.load("ultralytics/yolov5", "yolov5s", pretrained=True)
+    yolo_nas = super_gradients.training.models.get("yolo_nas_m", pretrained_weights="coco")
     data, metaData = tfds.load('cats_vs_dogs', as_supervised=True, with_info=True)
-    for i, (img, tag) in enumerate(data['train']):
+    for i, (img, tag) in enumerate(data['train'].take(20)):
         img_cv = cv2.cvtColor(img.numpy(), cv2.COLOR_RGB2BGR)
-        pred = model(img_cv)
-        df = pred.pandas().xyxy[0]
-        df = df[df["confidence"] > 0.2]
-        if True:
-            df = df[df["class"] == 0]
-            if len(df) > 0:
-                bg_count = bg_count + 1
-        df = df[df["class"] == 16]
-        if len(df) > 0:
+        pred = yolo_nas.predict(img_cv)
+        detections = sv.Detections.from_yolo_nas(pred[0])
+        detections = detections[detections.confidence > 0.2]
+        detections = detections[detections.class_id == 16]
+        if len(detections) > 0:
             detector_count = detector_count + 1
         if tag == 1:
             dog_count = dog_count + 1

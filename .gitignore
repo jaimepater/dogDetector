@@ -163,5 +163,6 @@ cython_debug/
 *.png
 *.jpg
 *.jepg
+*.pth
 /dataset/*
 .DS_Store

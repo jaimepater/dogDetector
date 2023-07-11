@@ -46,6 +46,7 @@ def detector_bg(images):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+    print("aaaaaa")
     images = get_images_paths("./dogs")
     detector_bg(images)
 
