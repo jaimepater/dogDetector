@@ -19,10 +19,11 @@ headers = {
 
 
 @debounce(5)
-def send_frame_as_big_dog(img):
+def send_frame_as_big_dog(img, source_img):
     print("entrooo big dog")
     # Convert the frame to bytes
     _, img_encoded = cv2.imencode('.jpg', img)
+    _, source_img_encoded = cv2.imencode('.jpg', source_img)
 
     payload = {
         'type': 'big-dog'
@@ -31,9 +32,10 @@ def send_frame_as_big_dog(img):
 
     image_name = str(uuid.uuid4())
     print(url, headers, payload)
-    files = {
-        'image': (image_name, img_encoded.tobytes(), 'image/jpeg')
-    }
+    files = [
+        ('images', (image_name, source_img_encoded.tobytes(), 'image/jpeg')),
+        ('images', (image_name, img_encoded.tobytes(), 'image/jpeg'))
+    ]
     response = requests.post(url, headers=headers, data=payload, files=files)
     if response.status_code == 200:
         # Request was successful
@@ -42,10 +44,11 @@ def send_frame_as_big_dog(img):
 
 
 @debounce(5)
-def send_frame_as_dog(img):
+def send_frame_as_dog(img, source_img):
     print("entrooo dog")
     # Convert the frame to bytes
     _, img_encoded = cv2.imencode('.jpg', img)
+    _, source_img_encoded = cv2.imencode('.jpg', source_img)
 
     payload = {
         'type': 'dog'
@@ -54,9 +57,10 @@ def send_frame_as_dog(img):
 
     image_name = str(uuid.uuid4())
     print(url, headers, payload)
-    files = {
-        'image': (image_name, img_encoded.tobytes(), 'image/jpeg')
-    }
+    files = [
+        ('images', (image_name, source_img_encoded.tobytes(), 'image/jpeg')),
+        ('images', (image_name, img_encoded.tobytes(), 'image/jpeg'))
+    ]
     response = requests.post(url, headers=headers, data=payload, files=files)
     if response.status_code == 200:
         # Request was successful
@@ -84,6 +88,7 @@ def detector_bg(img, model, model_bd):
     detections = sv.Detections.from_yolo_nas(pred[0])
     detections = detections[detections.confidence > 0.5]
     detections = detections[detections.class_id == 16]
+    source_img = frame.copy()
 
     if len(detections) > 0:
         bbboxes = detections.xyxy
@@ -99,9 +104,9 @@ def detector_bg(img, model, model_bd):
             for j, d in enumerate(bbboxes_bg):
                 bbox_bg = bbboxes_bg[j].astype(int)
                 cv2.rectangle(frame, (bbox_bg[0], bbox_bg[1]), (bbox_bg[2], bbox_bg[3]), (0, 255, 0), 2)
-            send_frame_as_big_dog(frame.copy())
+            send_frame_as_big_dog(frame.copy(), source_img)
         else:
-            send_frame_as_dog(frame.copy())
+            send_frame_as_dog(frame.copy(), source_img)
 
 
 # Press the green button in the gutter to run the script.
