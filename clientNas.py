@@ -12,25 +12,23 @@ from dotenv import load_dotenv
 load_dotenv()
 API_BASE_URL = os.environ.get('API_BASE_URL')
 SECRET = os.environ.get('SECRET')
+url = f'{API_BASE_URL}/dog'
+headers = {
+    'Authorization': f'Bearer {SECRET}'
+}
+
 
 @debounce(5)
-def send_frame_as_image(img, is_big_dog):
-    print("entrooo")
+def send_frame_as_big_dog(img):
+    print("entrooo big dog")
     # Convert the frame to bytes
     _, img_encoded = cv2.imencode('.jpg', img)
-    url = f'{API_BASE_URL}/dog'
-    headers = {
-        'Authorization': f'Bearer {SECRET}'
-    }
-    if is_big_dog:
-        payload_type = 'big-dog'
-    else:
-        payload_type = 'dog'
 
-    # Request payload
     payload = {
-        'type': payload_type
+        'type': 'big-dog'
     }
+    # Request payload
+
     image_name = str(uuid.uuid4())
     print(url, headers, payload)
     files = {
@@ -40,7 +38,30 @@ def send_frame_as_image(img, is_big_dog):
     if response.status_code == 200:
         # Request was successful
         print('API request successful.')
-        print(response.json())
+    print(response.json())
+
+
+@debounce(5)
+def send_frame_as_dog(img):
+    print("entrooo dog")
+    # Convert the frame to bytes
+    _, img_encoded = cv2.imencode('.jpg', img)
+
+    payload = {
+        'type': 'dog'
+    }
+    # Request payload
+
+    image_name = str(uuid.uuid4())
+    print(url, headers, payload)
+    files = {
+        'image': (image_name, img_encoded.tobytes(), 'image/jpeg')
+    }
+    response = requests.post(url, headers=headers, data=payload, files=files)
+    if response.status_code == 200:
+        # Request was successful
+        print('API request successful.')
+    print(response.json())
 
 
 def get_camera():
@@ -60,7 +81,6 @@ def get_camera():
 
 def detector_bg(img, model, model_bd):
     pred = list(model.predict(img))
-    have_big_dog = False
     detections = sv.Detections.from_yolo_nas(pred[0])
     detections = detections[detections.confidence > 0.5]
     detections = detections[detections.class_id == 16]
@@ -75,21 +95,22 @@ def detector_bg(img, model, model_bd):
         detections_bg = detections_bg[detections_bg.confidence > 0.5]
         detections_bg = detections_bg[detections_bg.class_id == 0]
         if len(detections_bg) > 0:
-            have_big_dog = True
             bbboxes_bg = detections_bg.xyxy
             for j, d in enumerate(bbboxes_bg):
                 bbox_bg = bbboxes_bg[j].astype(int)
                 cv2.rectangle(frame, (bbox_bg[0], bbox_bg[1]), (bbox_bg[2], bbox_bg[3]), (0, 255, 0), 2)
-        send_frame_as_image(frame.copy(), have_big_dog)
+            send_frame_as_big_dog(frame.copy())
+        else:
+            send_frame_as_dog(frame.copy())
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     capture = get_camera()
     yolo_nas = super_gradients.training.models.get("yolo_nas_m", pretrained_weights="coco")
-    model_bd = models.get("yolo_nas_l",
+    model_bd = models.get("yolo_nas_s",
                           num_classes=2,
-                          checkpoint_path="bg_nas_l.pth")
+                          checkpoint_path="bg_nas_s.pth")
     while True:
         ret, frame = capture.read()
         if ret:
