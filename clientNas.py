@@ -68,7 +68,7 @@ def get_camera():
     x = 1920
     y = 1080
     fps = 30
-    capture = cv2.VideoCapture(0)
+    capture = cv2.VideoCapture(2)
     capture.set(cv2.CAP_PROP_FOURCC, cv2.VideoWriter_fourcc('M', 'J', 'P', 'G'))
     capture.set(cv2.CAP_PROP_FRAME_WIDTH, x)
     capture.set(cv2.CAP_PROP_FRAME_HEIGHT, y)
