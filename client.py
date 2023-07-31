@@ -57,6 +57,7 @@ def detector_bg(img, model, model_bd):
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
+    print("start")
     capture = get_camera()
     model = torch.hub.load("ultralytics/yolov5", "yolov5s", pretrained=True)
     model_bd = torch.hub.load('ultralytics/yolov5', 'custom', path='./bd.pt',
