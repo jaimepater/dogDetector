@@ -162,7 +162,7 @@ cython_debug/
 
 *.png
 *.jpg
-*.jepg
+*.jpeg
 *.pth
 .idea/*
 /dataset/*
