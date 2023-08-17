@@ -6,6 +6,20 @@ import numpy as np
 from tensorflow.keras.preprocessing.image import ImageDataGenerator
 import shutil
 
+def move_images(routes, src_path, dst_path):
+    for image in routes:
+        src = os.path.join(src_path, image)
+        dst = os.path.join(dst_path, image)
+        shutil.copy(src, dst)
+
+def get_images_paths(route):
+    images_list = os.listdir(route)
+    images = []
+    for i, name in enumerate(images_list):
+        image_path = os.path.join(route, name)
+        images.append(name)
+    return images
+
 def save_images(route, images):
     for img in images:
         unique_filename = str(uuid.uuid4()) + ".jpg"
@@ -46,11 +60,13 @@ def new_images(images):
 
 
 def generate_images():
-    route = "./akita"
+    route = "./normal-dogs"
     images = load_images(route)
     augmented_images = new_images(images)
-    new_route = "./generateImages"
+    new_route = "./generateImages-nd"
     save_images(new_route, augmented_images)
+    origin_images = get_images_paths(route)
+    move_images(origin_images,route, new_route)
 
 
 if __name__ == '__main__':

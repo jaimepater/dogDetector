@@ -1,7 +1,9 @@
 import os
-import torch
 import random
 import shutil
+import super_gradients
+import supervision as sv
+from super_gradients.training import models
 
 
 
@@ -16,14 +18,15 @@ def get_images_paths(route):
 
 def validate_images(routes, src):
     valid_routes = []
-    model = torch.hub.load("ultralytics/yolov5", "yolov5s", pretrained=True)
+    yolo_nas = super_gradients.training.models.get("yolo_nas_m", pretrained_weights="coco")
     for name in routes:
+        print("aaaa")
         route = os.path.join(src, name)
-        pred = model(route)
-        df = pred.pandas().xyxy[0]
-        df = df[df["confidence"] > 0.2]
-        df = df[df["class"] == 16]
-        if len(df) > 0:
+        pred = list(yolo_nas.predict(route))
+        detections = sv.Detections.from_yolo_nas(pred[0])
+        detections = detections[detections.confidence > 0.2]
+        detections = detections[detections.class_id == 16]
+        if len(detections) > 0:
             valid_routes.append(name)
     return valid_routes
 
@@ -45,13 +48,13 @@ def move_images(routes, src_path, dst_path):
 
 
 def split_images():
-    route = "./dogs"
+    route = "./generateImages"
     images = get_images_paths(route)
     valid_routes = validate_images(images,route)
     print("base", len(images))
     print("out", len(valid_routes))
-    train_dir = "./contentDogs/train"
-    test_dir = "./contentDogs/validation"
+    train_dir = "./content/train"
+    test_dir = "./content/validation"
     os.makedirs(train_dir, exist_ok=True)
     os.makedirs(test_dir, exist_ok=True)
     train_images, test_images = get_arrays(valid_routes)

@@ -88,34 +88,34 @@ def detector_bg(img, model, model_bd):
     detections = sv.Detections.from_yolo_nas(pred[0])
     detections = detections[detections.confidence > 0.5]
     detections = detections[detections.class_id == 16]
-    source_img = frame.copy()
+    source_img = img.copy()
 
     if len(detections) > 0:
         bbboxes = detections.xyxy
         for i, b in enumerate(bbboxes):
             bbox = bbboxes[i].astype(int)
-            cv2.rectangle(frame, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 0, 0), 2)
+            cv2.rectangle(img, (bbox[0], bbox[1]), (bbox[2], bbox[3]), (255, 0, 0), 2)
         pred_bg = list(model_bd.predict(img))
         detections_bg = sv.Detections.from_yolo_nas(pred_bg[0])
-        detections_bg = detections_bg[detections_bg.confidence > 0.5]
+        detections_bg = detections_bg[detections_bg.confidence > 0.2]
         detections_bg = detections_bg[detections_bg.class_id == 0]
         if len(detections_bg) > 0:
             bbboxes_bg = detections_bg.xyxy
             for j, d in enumerate(bbboxes_bg):
                 bbox_bg = bbboxes_bg[j].astype(int)
-                cv2.rectangle(frame, (bbox_bg[0], bbox_bg[1]), (bbox_bg[2], bbox_bg[3]), (0, 255, 0), 2)
-            send_frame_as_big_dog(frame.copy(), source_img)
+                cv2.rectangle(img, (bbox_bg[0], bbox_bg[1]), (bbox_bg[2], bbox_bg[3]), (0, 255, 0), 2)
+            send_frame_as_big_dog(img.copy(), source_img)
         else:
-            send_frame_as_dog(frame.copy(), source_img)
+            send_frame_as_dog(img.copy(), source_img)
 
 
 # Press the green button in the gutter to run the script.
 if __name__ == '__main__':
     capture = get_camera()
     yolo_nas = super_gradients.training.models.get("yolo_nas_m", pretrained_weights="coco")
-    model_bd = models.get("yolo_nas_s",
+    model_bd = models.get("yolo_nas_l",
                           num_classes=2,
-                          checkpoint_path="bg_nas_s.pth")
+                          checkpoint_path="ckpt_best_l.pth")
     while True:
         ret, frame = capture.read()
         if ret:
@@ -126,5 +126,3 @@ if __name__ == '__main__':
 
     capture.release()
     cv2.destroyAllWindows()
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
